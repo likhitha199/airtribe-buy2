@@ -6,7 +6,13 @@ const App = () => {
   const [dailyBudget, setDailyBudget] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [todo, setTodo] = useState({})
 
+  /*
+    Used to run a side effect in your code
+    Side effect is a function that runs after the component is rendered
+  
+  */
   useEffect(() => {
     if (totalExpenses > dailyBudget) {
       alert("You have exceeded your daily budget");
@@ -15,7 +21,10 @@ const App = () => {
       setDailyBudget(null);
       // API call to store the transactions
     }
-  },[totalExpenses]);
+  },[totalExpenses, dailyBudget]);
+
+  // only runs once when the component is rendered
+  // after the component has rendered
 
 
   return ( 

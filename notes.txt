@@ -1,0 +1,10 @@
+1. useState
+    Used to create a stateful reactive state (UI reacts to useState state changes)
+2. State and props
+    States are mutable while props are immutable.
+3. Data in React passes from parent to child (no exception).
+    Is there a way to pass data from child to parent? - Yes, via callbacks being invocked in the child
+4. useEffect is a way to
+    - Create a side effects after the component has rendered
+    - Use useEffect when you want your components to be in sync (Syncing of data across components)
+    - Optionally, you can also do API calls in your useEffect, but it is generally not recommended
