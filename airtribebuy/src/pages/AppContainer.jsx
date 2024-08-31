@@ -1,11 +1,13 @@
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import { NavLink } from 'react-router-dom';
 
 
 
 function AppContainer(props) {
+    const user = useSelector(state => state.user);
     return (
         <>
             <header>
@@ -27,6 +29,7 @@ function AppContainer(props) {
                         <li>Cart</li>
                     </ul>
                 </nav>
+                {user.user.email}
             </header>
             {props.children}
         </>

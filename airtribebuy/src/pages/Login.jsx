@@ -1,5 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux'
+import { setUserData } from "../store/slices/userSlice";
 const LoginPage = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const submit = (e) => {
         e.preventDefault();
@@ -13,6 +16,7 @@ const LoginPage = () => {
         }
         if (payload.email === dummyPayload.email && payload.password === dummyPayload.password) {
             localStorage.setItem('airtribe-user-auth', 'authenticated');
+            dispatch(setUserData(payload));
             navigate('/products', {
                replace: true,
             });

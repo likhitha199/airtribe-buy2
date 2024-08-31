@@ -7,27 +7,14 @@
 */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Grid, Card, Image, Text, Badge, Button, Group, Space, Pagination, Select, Notification, NumberInput } from "@mantine/core";
+import { Grid, Card, Image, Text, Badge, Button, Group, Space, Pagination, Select, LoadingOverlay, NumberInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import useFetchProductListing from "../services/product/useFetchProductListing";
 const Home = () => {
     const wishlist = JSON.parse(localStorage.getItem("airtribe-user-wishlist"));
-    const [products, setProducts] = useState([]);
     const [wishlistState, setWishlist] = useState([]);
-    const [activePage, setActivePage] = useState(1);
-    const [limit, setLimit] = useState(10);
     const navigate = useNavigate();
-    useEffect(() => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        })
-        async function fetchData() {
-            const data = await fetch(`https://fakestoreapi.in/api/products?page=${activePage}&limit=${limit}`);
-            const dataJson = await data.json();
-            setProducts(dataJson.products);
-        }
-        fetchData();
-    }, [activePage, limit])
+    const {products, activePage, limit, setActivePage, setLimit, loading, errorState} = useFetchProductListing('category?type=mobile');
     useEffect(() => {
         setWishlist(wishlist);
     },[wishlist])
@@ -67,9 +54,14 @@ const Home = () => {
             return true;
         }
     }
+    if (loading) {
+        return <LoadingOverlay visible={true} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+    }
+    if (errorState) {
+        return <h1>Error occurred : We could not fetch products...</h1>
+    }
     return (
         <>
-        
             <Grid>
                 {products?.map(product => 
                     <Grid.Col mah={800} key={product.id} span={{ base: 12, md: 6, lg: 3 }}>
@@ -97,7 +89,7 @@ const Home = () => {
                                 {product.description}
                             </Text> */}
 
-                            <Button 
+                            {/* <Button 
                                 onClick={(e) => handleAddToWishList(e, product)} 
                             color="orange"
                              fullWidth mt="md"
@@ -105,7 +97,7 @@ const Home = () => {
                               disabled={wishlistState.find(item => item.id === product.id)}
                             >
                             {wishlistState.find(item => item.id === product.id) ? 'Wishlisted' : 'Add to wishlist'}
-                            </Button>
+                            </Button> */}
                             <Button 
                                 onClick={(e) => {
                                     e.stopPropagation();
