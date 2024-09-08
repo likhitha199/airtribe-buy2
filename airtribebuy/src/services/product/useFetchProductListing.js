@@ -1,28 +1,44 @@
-import { useEffect, useState } from "react";
-export default function useFetchProductListing(optionalQuery = "") {
+// services/product/useFetchProductListing.js
+import { useState, useEffect } from 'react';
+
+const useFetchProductListing = (endpoint) => {
     const [products, setProducts] = useState([]);
     const [activePage, setActivePage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [errorState, setErrorState] = useState(null);
+
     useEffect(() => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        })
-        async function fetchData() {
+        const fetchProducts = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-                const data = await fetch(`https://fakestoreapi.in/api/products/${optionalQuery}&page=${activePage}&limit=${limit}`);
-                const dataJson = await data.json();
-                setProducts(dataJson.products);
-                setLoading(false);
+                
+                const response = await fetch(`${endpoint}?page=${activePage}&limit=${limit}`);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setProducts(data);
             } catch (error) {
-               setLoading(false);
-               setErrorState(error);
+                setErrorState(error.message);
+            } finally {
+                setLoading(false);
             }
-        }
-        fetchData();
-    }, [activePage, limit, optionalQuery])
-    return {products, activePage, limit, setActivePage, setLimit, loading, errorState};
-}
+        };
+
+        fetchProducts();
+    }, [activePage, limit]);
+
+    return {
+        products,
+        activePage,
+        limit,
+        setActivePage,
+        setLimit,
+        loading,
+        errorState
+    };
+};
+
+export default useFetchProductListing;

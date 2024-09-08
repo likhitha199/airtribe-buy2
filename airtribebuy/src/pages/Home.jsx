@@ -1,145 +1,151 @@
-/*
-    fetch("https://fakestoreapi.in/api/products")
-.then(res => res.json())
-.then(res => console.log(res))
-
-
-*/
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Grid, Card, Image, Text, Badge, Button, Group, Space, Pagination, Select, LoadingOverlay, NumberInput } from "@mantine/core";
+import { Select, Grid, Card, Image, Text, Badge, Button, Group, Space, NumberInput, LoadingOverlay, Pagination } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import useFetchProductListing from "../services/product/useFetchProductListing";
+
 const Home = () => {
+    const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || {});
     const wishlist = JSON.parse(localStorage.getItem("airtribe-user-wishlist"));
     const [wishlistState, setWishlist] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
     const navigate = useNavigate();
-    const {products, activePage, limit, setActivePage, setLimit, loading, errorState} = useFetchProductListing('category?type=mobile');
+    const { products, activePage, limit, setActivePage, setLimit, loading, errorState } = useFetchProductListing(`https://fakestoreapi.com/products`);
+
     useEffect(() => {
         setWishlist(wishlist);
-    },[wishlist])
-    const handleAddToWishList = (e, product) => {
-        e.stopPropagation();
-        // Check if user is authenticated or not
-        const isAuth = localStorage.getItem('airtribe-user-auth');
-        if (!isAuth || isAuth !== 'authenticated' ) {
-            notifications.show({
-                title: 'Unauthrorized',
-                message: 'Please login',
-                color: "red"
-            })
-            return;
-        }
-        const wishlist = JSON.parse(localStorage.getItem('airtribe-user-wishlist'));
-        if (!wishlist) {
-            let newWishlist = [];
-            newWishlist.push(product);
-            localStorage.setItem('airtribe-user-wishlist', JSON.stringify(newWishlist));
-            notifications.show({
-                title: 'Added to wishlist!',
-                color: "green",
-                position: "top-center"
-            })
-            return true;
-        }
-        if (wishlist.length) {
-            const modifiedWishlist = [...wishlist];
-            modifiedWishlist.push(product);
-            localStorage.setItem('airtribe-user-wishlist', JSON.stringify(modifiedWishlist));
-            notifications.show({
-                title: 'Added to wishlist!',
-                color: "green",
-                position: "top-center"
-            })
-            return true;
-        }
-    }
+    }, [wishlist]);
+
+    useEffect(() => {
+        setActivePage(currentPage);
+        setLimit(itemsPerPage);
+    }, [currentPage, itemsPerPage]);
+
+    // Helper function to update cart in localStorage
+    const updateCartInLocalStorage = (updatedCart) => {
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+    };
+
+    const handleAddToCart = (product) => {
+        setCart((prevCart) => {
+            const updatedCart = {
+                ...prevCart,
+                [product.id]: {
+                    ...product,
+                    quantity: 1,
+                    totalPrice: product.price,
+                },
+            };
+            updateCartInLocalStorage(updatedCart); // Save to localStorage
+            return updatedCart;
+        });
+        notifications.show({
+            title: 'Added to Cart',
+            message: `${product.title} has been added to your cart.`,
+            color: "green",
+        });
+    };
+
+    const handleQuantityChange = (productId, value) => {
+        setCart((prevCart) => {
+            const updatedProduct = { ...prevCart[productId], quantity: value, totalPrice: value * prevCart[productId].price };
+            const updatedCart = { ...prevCart, [productId]: updatedProduct };
+            updateCartInLocalStorage(updatedCart); // Save to localStorage
+            return updatedCart;
+        });
+    };
+
     if (loading) {
-        return <LoadingOverlay visible={true} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+        return <LoadingOverlay visible={true} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />;
     }
+
     if (errorState) {
-        return <h1>Error occurred : We could not fetch products...</h1>
+        return <h1>Error occurred: We could not fetch products...</h1>;
     }
+
     return (
         <>
             <Grid>
-                {products?.map(product => 
-                    <Grid.Col mah={800} key={product.id} span={{ base: 12, md: 6, lg: 3 }}>
-                        <Card onClick={() => {
-                           
-                            navigate(`/products/${product.id}`, {
-                                preventScrollReset: false
-                            })
-                        }} shadow="sm" padding="lg" radius="md" withBorder>
-                            <Card.Section>
-                                <Image
-                                src={product.image}
-                                alt={product.model}
-                                />
-                            </Card.Section>
-                            <Group justify="space-between" mt="md" mb="xs">
-                                <Text fw={700}>{product.title}</Text>
-                                <Badge color="pink">{product.category}</Badge>
-                            </Group>
-
-                            <Text fz={30} fw={500}>${product.price}</Text>
-                            <Space h="md" />
-
-                            {/* <Text size="sm" c="dimmed">
-                                {product.description}
-                            </Text> */}
-
-                            {/* <Button 
-                                onClick={(e) => handleAddToWishList(e, product)} 
-                            color="orange"
-                             fullWidth mt="md"
-                              radius="md"
-                              disabled={wishlistState.find(item => item.id === product.id)}
+                {products?.map((product) => {
+                    const cartItem = cart[product.id];
+                    return (
+                        <Grid.Col mah={800} key={product.id} span={{ base: 12, md: 6, lg: 3 }}>
+                            <Card
+                                onClick={() => {
+                                    navigate(`/products/${product.id}`, {
+                                        preventScrollReset: false,
+                                    });
+                                }}
+                                shadow="sm"
+                                padding="lg"
+                                radius="md"
+                                withBorder
                             >
-                            {wishlistState.find(item => item.id === product.id) ? 'Wishlisted' : 'Add to wishlist'}
-                            </Button> */}
-                            <Button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }} color="purple" fullWidth mt="md" radius="md">
-                            Add To Cart
-                            </Button>
-                            
-                        </Card>
-                    </Grid.Col>
-            )}  
+                                <Card.Section>
+                                    <Image src={product.image} alt={product.title} height={200} fit="contain" />
+                                </Card.Section>
+                                 <Space h="md" />
+                                <Group justify="space-between" mt="md" mb="xs">
+                                    <Text fw={700}>{product.title}</Text>
+                                    <Badge color="pink">{product.category}</Badge>
+                                </Group>
+                                <Text fz={30} fw={500}>${product.price}</Text>
+                                <Space h="md" />
+
+                                <Group align="center" gap={5} mt="md">
+                                    <NumberInput
+                                        value={cartItem?.quantity || 1}
+                                        onChange={(value) => handleQuantityChange(product.id, value)}
+                                        min={1}
+                                        max={99}
+                                        placeholder="Qty"
+                                        styles={{ input: { width: '60px' } }}
+                                    />
+                                    <Button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddToCart(product);
+                                        }}
+                                        color="purple"
+                                        radius="md"
+                                    >
+                                        Add To Cart
+                                    </Button>
+                                </Group>
+                            </Card>
+                        </Grid.Col>
+                    );
+                })}
             </Grid>
+
             <Space h="xl" />
             <Group align="center" gap={5}>
-                                <Button>+</Button>
-                                <NumberInput/>
-                                <Button>-</Button>
-                            </Group>
+                <Button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>Previous</Button>
+                <NumberInput
+                    value={currentPage}
+                    onChange={(value) => value && setCurrentPage(value)}
+                    min={1}
+                    styles={{ input: { width: '60px' } }}
+                />
+                <Button onClick={() => setCurrentPage((prev) => prev + 1)}>Next</Button>
+            </Group>
             <Group gap={5} justify="center">
-                <Pagination value={activePage} onChange={setActivePage} total={Math.ceil(500 / limit)} />
+                <Pagination
+                    value={currentPage}
+                    onChange={setCurrentPage}
+                    total={Math.ceil(500 / limit)} // Adjust as needed
+                />
                 <Select
-                    value={limit}
-                    onChange={setLimit}
+                    value={itemsPerPage.toString()}
+                    onChange={(value) => setItemsPerPage(Number(value))}
                     placeholder="Set Limit"
                     data={['10', '20', '30', '40', '50']}
-                 />
+                />
             </Group>
-            <Space h="xl" />   
+            <Space h="xl" />
         </>
-     );
-}
- 
+    );
+};
+
 export default Home;
-
-
-/*
-    Implement add to cart functionality -:
-    1. On the initial click of add to cart button, the button should be hidden and a 
-    group of + and - and input field should be displayed.
-    2. The input field must be populated by 1 (default value)
-    3. The + and - buttons must be connected to the input field such that when the + button is clicked, the input field value increases by 1 and when the - button is clicked, the input field value decreases by 1.
-    4. On the above change, change the totalPrice and the quantity key of the product in the cart
-    5. (Optional) - Implment a feature in which a user can directly input the qunatity in the field and that should be updated in the cart product (debouncing here...)    
-
-
-*/

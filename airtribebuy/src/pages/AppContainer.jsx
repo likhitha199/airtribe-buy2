@@ -26,7 +26,9 @@ function AppContainer(props) {
                         <li>
                             <Link to="/wishlist">Wishlist</Link>
                         </li>
-                        <li>Cart</li>
+                        <li>
+                            <Link to="/cart">Cart</Link>
+                        </li>
                     </ul>
                 </nav>
                 {user.user.email}
